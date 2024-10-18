@@ -29,18 +29,38 @@ def aggregate_items(orders):
                 items[item_name]['orders'] += 1  # Increment order count
     return items
 
+def load_orders_from_file(input_file):
+    """Load orders from the specified JSON file."""
+    try:
+        with open(input_file, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        print(f"Error: The file '{input_file}' was not found.")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print(f"Error: The file '{input_file}' is not a valid JSON file.")
+        sys.exit(1)
+
+def save_to_file(data, filename):
+    """Save data to a JSON file."""
+    try:
+        with open(filename, 'w') as file:
+            json.dump(data, file, indent=4)
+    except IOError as e:
+        print(f"Error: Failed to write to file '{filename}': {e}")
+        sys.exit(1)
+
 def main(input_file):
     """Main function to process orders and generate JSON output files."""
     customers = {}
-    
-    # Read JSON orders from the input file
-    with open(input_file, 'r') as file:
-        orders = json.load(file)
+
+    # Load orders from the input file
+    orders = load_orders_from_file(input_file)
 
     # Process each order
     for order in orders:
         formatted_phone, customer_name = extract_customer_data(order)
-        
+
         if formatted_phone and customer_name:
             customers[formatted_phone] = customer_name
 
@@ -48,12 +68,10 @@ def main(input_file):
     items = aggregate_items(orders)
 
     # Save customers to customers.json
-    with open('customers.json', 'w') as customers_file:
-        json.dump(customers, customers_file, indent=4)
+    save_to_file(customers, 'customers.json')
 
     # Save items to items.json
-    with open('items.json', 'w') as items_file:
-        json.dump(items, items_file, indent=4)
+    save_to_file(items, 'items.json')
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
